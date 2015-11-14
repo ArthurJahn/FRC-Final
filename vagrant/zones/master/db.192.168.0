@@ -1,0 +1,15 @@
+;
+; BIND reverse data file for 0.168.192.in-addr.arpa
+;
+$TTL    604800
+0.168.192.in-addr.arpa.      IN      SOA     ns1.linuxconfig.org. admin.linuxconfig.org. (
+                          1         ; Serial
+                          3h       ; Refresh after 3 hours
+                          1h       ; Retry after 1 hour
+                          1w       ; Expire after 1 week
+                          1h )     ; Negative caching TTL of 1 day
+;
+0.168.192.in-addr.arpa.       IN      NS      ns1.linuxconfig.org.
+0.168.192.in-addr.arpa.       IN      NS      ns2.linuxconfig.org.
+
+10.0.168.192.in-addr.arpa.   IN      PTR     linuxconfig.org.
