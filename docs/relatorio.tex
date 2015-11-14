@@ -1,0 +1,68 @@
+
+\documentclass[a4paper]{report} %padrao letterpaper, 10pt
+\usepackage[utf8]{inputenc}
+\usepackage[brazil]{babel}
+\usepackage{amsfonts,amssymb,graphicx,enumerate}
+\usepackage[centertags]{amsmath}
+% Configuracoes de pagina
+\usepackage[lmargin=3cm,rmargin=3cm,tmargin=3cm,bmargin=3cm]{geometry}
+% Layout da pagina
+\usepackage{hyperref}
+% Layout para código
+\usepackage{listings}
+% Font for code style
+\usepackage{courier}
+% The 68 standard colors known to dvips
+\usepackage[usenames,dvipsnames]{xcolor}
+\hypersetup{pdfpagelayout=SinglePage, % ou TwoPageLeft
+    colorlinks=true,
+    pdftitle={Relatório de asuhaush Redes},
+    pdfauthor={Áulus Diniz, Arthur Jahn}}
+
+%*******************************************************
+\definecolor{light-gray}{gray}{0.90}
+\lstset{
+  backgroundcolor=\color{light-gray},
+  basicstyle=\footnotesize\ttfamily,
+  breaklines=true
+}
+
+\title{Fundamentos de Redes de Computadores: \\ Servidor DNS com Extensões DNSSEC}
+\author{Arthur Jahn, Áulus Diniz, Gabriel Araújo, Jonatas Lenon}
+\date{26 de Outubro de 2015}    %para ocultar a data digite: \date{ }
+%*******************************************************
+\begin{document}    %Inicio do documento
+\maketitle  %cria o titulo na capa
+
+\tableofcontents %Sumario
+%-------------------------------------------------------
+\chapter{Capítulo de Exemplo}
+\label{chap_primeiro}
+
+\section{Exemplo}
+\label{sec_primeiro_exemplo}
+
+Exemplo de código
+\begin{lstlisting}[language=bash]
+
+	sudo aptitude install tshark
+
+	sudo aptitude install texlive
+
+	sudo aptitude install texlive-lang-portuguese
+
+
+\end{lstlisting}
+
+% Referencias bibliograficas
+\begin{thebibliography}{99}
+\bibitem{Stewart} STEWART, James. {\sl C\'alculo.} Vol. 1. S\~ao Paulo: Pioneira, 2006.
+\bibitem{IETF} IETF, Internet Engineering Task Force, RFC 1886, \url{http://tools.ietf.org/html/rfc1886}, 1995.
+
+\bibitem{LaTeX}
+\url{http://latexbr.blogspot.com}
+\end{thebibliography}
+
+\addcontentsline{toc}{chapter}{Refer\^encias Bibliogr\'aficas}
+
+\end{document}  %Fim do documento
