@@ -38,21 +38,126 @@
 \chapter{ DNS  - \textit{Domain Name System}}
 \label{chap_dns}
 
-Explicar o serviço, protocolos, e afins
+O DNS provê serviços de resolução de \textit{hosts} por meio da tradução de nomes de domínios em números de endereçamento IP. Como um mesmo domínio pode estar vinculado a vários endereços IP, esse serviço pode ser responsável também por distribuição de carga entre os \textit{hosts} de destino, alternando o endereço fornecido ao cliente quando uma solicitação de resolução de domínio é feita.
 
+Uma consulta DNS consiste basicamente de uma requisição enviada pelo cliente seguida de uma resposta devolvida pelo servidor. Nesse sentido, é interessante a utilização de um protocolo de transporte sem estabelecimento de conexão como o UDP para não acarretar em um atraso na requisição, como no caso do protocolo TCP que necessita de um \textit{handshake} de três vias.
+
+		O serviço de DNS utiliza normalmente a porta 53.
 \section{Configuração do Servidor DNS}
 \label{sec_configuracao}
 
-Exemplo de código
+O servido DNS utilizado nesse experimento foi o Bind9 - \textit{Berkeley Internet Name Domain} - comumente encontrado em distribuições linux.
+
+Para a instalação do servidor Bind, caso não esteja instalado, pode-se instalar seguindo o seguinte passo:
+
 \begin{lstlisting}[language=bash]
 
-	sudo aptitude install tshark
-
-	sudo aptitude install texlive
-
-	sudo aptitude install texlive-lang-portuguese
+	sudo apt-get install bind9 dnsutils
 
 \end{lstlisting}
+
+Após a instalação do servidor DNS é necessario configurar as zonas de endereçamento. Cada zona consiste em um mapeamento de uma URL para um endereço de IP e vice-versa. Para configurar uma zona no Bind, deve-se criar uma arquivo de zona.
+
+Navegue até a pasta referente ao servidor Bind e crie uma pasta para armazenar os arquivos de zona.
+
+\begin{lstlisting}[language=bash]
+
+	cd /etc/bind
+
+	mkdir -p zones/master
+
+\end{lstlisting}
+
+O arquivo de zona criado é referênte ao site www.tcpdump.org. Portando o nome do arquivo deve ser: \texdb{db.tcpdump.org} e deve conter o seguinte conteudo:
+
+\begin{lstlisting}[language=bash]
+
+;
+; BIND data file for tcpdump.org
+;
+$TTL    3h
+@       IN      SOA     ns1.tcpdump.org. admin.tcpdump.org. (
+                          1        ; Serial
+                          3h       ; Refresh after 3 hours
+                          1h       ; Retry after 1 hour
+                          1w       ; Expire after 1 week
+                          1h )     ; Negative caching TTL of 1 day
+;
+@       IN      NS      ns1.tcpdump.org.
+@       IN      NS      ns2.tcpdump.org.
+
+
+tcpdump.org.    IN      MX      10      mail.tcpdump.org.
+tcpdump.org.    IN      A       192.139.46.66
+ns1                     IN      A       192.139.46.66
+ns2                     IN      A       192.139.46.66
+www                     IN      CNAME   tcpdump.org.
+mail                    IN      A       192.139.46.66
+ftp                     IN      CNAME   tcpdump.org.
+
+\end{lstlisting}
+
+Com o arquivo de zona configurado é necessário informar ao ao servidor DNS a localização desse arquivo.
+
+\begin{lstlisting}[language=bash]
+zone "tcpdump.org" {
+       type master;
+       file "/etc/bind/zones/master/db.linuxconfig.org";
+};
+\end{lstlisting}
+
+Com esses arquivos é possivel a partir de uma URL descobrir seu IP.
+
+Uma última coisa é adicionar um endereço de IP de um servidor DNS estável no arquivo named.conf.options. Este endereço de IP é usado quando o servidor DNS local não sabe a resposta para a consulta de resolução de nome. Para este experimento foi utilizado o servidor de DNS do google - 8.8.8.8 ou 8.8.4.4.
+
+\begin{lstlisting}[language=bash]
+ forwarders {
+     8.8.4.4;
+};
+\end{lstlisting}
+
+Com as configurações realizadas liga-se o servidor Bind da seguinte forma:
+
+\begin{lstlisting}[language=bash]
+ cd /etc/init.d/
+ sudo ./bind9 start
+\end{lstlisting}
+
+Com os servidor DNS Bind é possivel obter o endereço de IP de um site através de um requisição, utilizando o comando dig, no servidor DNS local. Nesse experimento o IP da máquina com o servidor DNS é: 192.168.1.23
+
+\begin{lstlisting}[language=bash]
+ dig @192.168.1.23 tcpdump.org
+
+ ; <<>> DiG 9.8.3-P1 <<>> @192.168.1.23 tcpdump.org
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 30817
+;; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 2
+
+;; QUESTION SECTION:
+;tcpdump.org.			IN	A
+
+;; ANSWER SECTION:
+tcpdump.org.		10800	IN	A	192.139.46.66
+
+;; AUTHORITY SECTION:
+tcpdump.org.		10800	IN	NS	ns1.tcpdump.org.
+tcpdump.org.		10800	IN	NS	ns2.tcpdump.org.
+
+;; ADDITIONAL SECTION:
+ns1.tcpdump.org.	10800	IN	A	192.139.46.66
+ns2.tcpdump.org.	10800	IN	A	192.139.46.66
+
+;; Query time: 165 msec
+;; SERVER: 192.168.1.23#53(192.168.1.23)
+;; WHEN: Sat Nov 14 16:18:10 2015
+;; MSG SIZE  rcvd: 113
+\end{lstlisting}
+
+
+
+
 
 \section{Vulnerabilidades }
 \label{sec_vulnerabilidades}
