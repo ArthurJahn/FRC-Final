@@ -34,3 +34,11 @@ cp -f /vagrant/named.conf.options /etc/bind/
 echo 'starting bind server'
 cd /etc/init.d/
 ./bind9 restart
+
+myip=
+while IFS=$': \t' read -a line ;do
+    [ -z "${line%inet}" ] && ip=${line[${#line[1]}>4?1:2]} &&
+        [ "${ip#127.0.0.1}" ] && myip=$ip
+  done< <(LANG=C /sbin/ifconfig)
+
+echo "The DNSSEC server address is $myip. Please point your dns solver to this address to use this server."
