@@ -1,0 +1,6 @@
+zone "redesfga.com" {
+       type master;
+       file "/etc/bind/zones/master/db.redesfga.com.signed";
+        allow-transfer {8.8.8.8;};
+        allow-update {none;};
+};
