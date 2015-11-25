@@ -35,14 +35,22 @@
 
 \tableofcontents %Sumario
 %-------------------------------------------------------
-\chapter{ DNS  - \textit{Domain Name System}}
+\chapter{Problema e Motivação}
+\label{chap_problema}
+
+Aqui devem ser apresentados os problemas de segurança do DNS e como eles afetam os serviços disponibilizados pela internet.
+
+Deve mostrar também o porquê da utilização de DNSSEC, as suas vantagens e o escopo de segurança (ou seja, quais tipos de ataques são evitados com a utilização de um DNSSEC e quais não).
+
+\chapter{DNS  - \textit{Domain Name System}}
 \label{chap_dns}
 
 O DNS provê serviços de resolução de \textit{hosts} por meio da tradução de nomes de domínios em números de endereçamento IP. Como um mesmo domínio pode estar vinculado a vários endereços IP, esse serviço pode ser responsável também por distribuição de carga entre os \textit{hosts} de destino, alternando o endereço fornecido ao cliente quando uma solicitação de resolução de domínio é feita.
 
 Uma consulta DNS consiste basicamente de uma requisição enviada pelo cliente seguida de uma resposta devolvida pelo servidor. Nesse sentido, é interessante a utilização de um protocolo de transporte sem estabelecimento de conexão como o UDP para não acarretar em um atraso na requisição, como no caso do protocolo TCP que necessita de um \textit{handshake} de três vias.
 
-		O serviço de DNS utiliza normalmente a porta 53.
+O serviço de DNS utiliza normalmente a porta 53.
+
 \section{Configuração do Servidor DNS}
 \label{sec_configuracao}
 
@@ -155,11 +163,7 @@ ns2.tcpdump.org.	10800	IN	A	192.139.46.66
 ;; MSG SIZE  rcvd: 113
 \end{lstlisting}
 
-
-
-
-
-\section{Vulnerabilidades }
+\section{Vulnerabilidades}
 \label{sec_vulnerabilidades}
 
 Explicar as vulnerabilidades e exemplificar no servidor.
@@ -190,6 +194,17 @@ Exemplo de código
 
 Explicar as vulnerabilidades e exemplificar no servidor a configuração da solução.
 
+\chapter{Resultados}
+
+\section{Implementação da Solução}
+
+Aqui devem ser descritos os paços para a construção do estudo sobre o DNSSEC. Deve ser apresentado o esquema das máquinas vagrant criadas e como o cliente faz as requisições.
+
+Deve ser mostrado o processo para reprodução do nosso estudo (por meio do script de quick-start no link do github). E também o processo que falta para se implementar o \textit{delegation signer} (DS). 
+
+\section{Considerações}
+
+Aqui vão vir as considerações sobre os resultados obtidos e a adequação com o propósito do trabalho.
 
 % Referencias bibliograficas
 \begin{thebibliography}{99}
