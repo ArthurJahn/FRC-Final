@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+DNS_IP=$(cat /vagrant/dns_server_ip.txt)
+
+echo "getting DNS info from $DNS_IP..." 
+
+sudo dig . DNSKEY | grep -Ev '^($|;)' > /vagrant/root.keys
+
+sudo dig @$DNS_IP +sigchase +trusted-key=/vagrant/root.keys redesfga.com. A | cat -n >> /vagrant/cron.log
+
