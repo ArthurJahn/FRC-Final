@@ -206,6 +206,12 @@ Exemplo de código
 
 \end{lstlisting}
 
+\section{Requisições seguras}
+\label{sec_req_seguras}
+
+
+
+
 \chapter{Resultados}
 
 \section{Implementação da Solução}
@@ -215,14 +221,14 @@ Foram desenvolvidos \textit{scripts} para inicialização das máquinas e config
 
 Execute os seguintes passos para subir o ambiente: Com as dependências instaladas, execute o arquivo quick-start encontrado na pasta vagrant. Esse executável irá inicializar um servidor DNS seguro configurando a zona \textit{redesfga.com}, uma servidor apache para onde a zona configurada aponta e um cliente que realizará uma requisição de resolução de nome ao servidor DNS. O resultado da requisição é encontrado no arquivo dnssec.log na pasta vagrant, e mostra todo o processo executado para fazer a requisição segura do domínio passado.\\
 
-É importante ressaltar que o DNSSEC não provê registro de \textit{delegation signer} (DS), isso devido ao custo atrelado à aquisição de um registro em servidores autorizados. Entretanto, o processo de configuração do DS foi estudado e pode ser encontrado por completo na \textit{wiki} do projeto no \textit{github}\footnote{documentação sobre configuração do DS: https://github.com/ArthurJahn/FRC-Final/wiki.}.
+É importante ressaltar que o serviço de DNSSEC configurado não provê registro de \textit{delegation signer} (DS), isso devido ao custo atrelado à aquisição de um registro em servidores autorizados. Entretanto, o processo de configuração do DS foi estudado e pode ser encontrado por completo na \textit{wiki} do projeto no \textit{github}\footnote{documentação sobre configuração do DS: https://github.com/ArthurJahn/FRC-Final/wiki.}.
 
 
 \section{Considerações}
 
 O DNS é um serviço crucial para o funcionamento da internet atualmente. Entretanto não foi idealizado provendo serviços de segurança, o que gera várias vulnerabilidades que são utilizadas para atacantes gerarem comportamentos idesejados da rede. \\
 
-Com esse trabalho foi possível identificar vulnerabilidades do serviço de DNS, configurar extensões de segurança DNSSEC, verificar os paços para a aquisição de respostas de requisições DNS de forma segura e compreender como os serviços de verificação de autenticidade da internet funcionam e quem é capaz de prover tais serviços. \\
+Com esse trabalho foi possível identificar vulnerabilidades do serviço de DNS, configurar extensões de segurança DNSSEC, verificar os passos para a aquisição de respostas de requisições DNS de forma segura e compreender como os serviços de verificação de autenticidade da internet funcionam e quem é capaz de prover tais serviços. \\
 
 Nesse sentido todos os objetivos propostos foram alcançados e o aprendizado obtido por meio da atividade prática mostrou a complexidade das operações relacionadas ao provimento de serviços seguros na internet.
 
