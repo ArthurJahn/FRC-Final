@@ -1,0 +1,17 @@
+echo "removing temp files..."
+rm dns-server/dns_server_ip.txt
+rm client/dns_server_ip.txt
+
+echo "Destroying DNSSec server..."
+cd dns-server
+vagrant destroy
+
+echo "Destroying apache server..."
+cd ../webserver
+vagrant destroy
+
+echo "Destroying client..."
+cd ../client
+vagrant destroy
+
+echo "environment clean"

@@ -1,3 +1,8 @@
+echo "removing temp files..."
+rm dns-server/dns_server_ip.txt
+rm client/dns_server_ip.txt
+rm dnssec.log
+
 echo "Starting DNSSec server..."
 cd dns-server
 vagrant up
@@ -13,3 +18,10 @@ vagrant up
 echo "Strating client..."
 cd ../client
 vagrant up
+
+cd ..
+
+cp client/dnssec.log .
+
+echo "logging DNSSEC data"
+cat dnssec.log

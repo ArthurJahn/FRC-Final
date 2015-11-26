@@ -6,5 +6,6 @@ echo "getting DNS info from $DNS_IP..."
 
 sudo dig . DNSKEY | grep -Ev '^($|;)' > /vagrant/root.keys
 
-sudo dig @$DNS_IP +sigchase +trusted-key=/vagrant/root.keys redesfga.com. A | cat -n >> /vagrant/cron.log
+sudo dig @$DNS_IP +sigchase +trusted-key=/vagrant/root.keys redesfga.com. A | cat -n >> /vagrant/dnssec.log
+
 
