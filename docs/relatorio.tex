@@ -1,4 +1,4 @@
-\documentclass[a4paper]{report} %padrao letterpaper, 10pt
+\documentclass[12pt,openright,a4paper]{report}
 \usepackage[utf8]{inputenc}
 \usepackage[brazil]{babel}
 \usepackage{amsfonts,amssymb,graphicx,enumerate}
@@ -13,9 +13,10 @@
 \usepackage{courier}
 % The 68 standard colors known to dvips
 \usepackage[usenames,dvipsnames]{xcolor}
-\hypersetup{pdfpagelayout=SinglePage, % ou TwoPageLeft
+\hypersetup{pdfpagelayout= SinglePage,
     colorlinks=true,
-    pdftitle={Relatório de asuhaush Redes},
+	linkcolor=blue,          	% color of internal links
+    pdftitle={Relatório de Redes},
     pdfauthor={Áulus Diniz, Arthur Jahn, Gabriel Araújo, Jonatas Lenon}}
 
 %*******************************************************
@@ -26,23 +27,27 @@
   breaklines=true
 }
 
+\frenchspacing 
+
 \title{Fundamentos de Redes de Computadores: \\ Servidor DNS com Extensões DNSSEC}
 \author{Arthur Jahn, Áulus Diniz, Gabriel Araújo, Jonatas Lenon}
-\date{15 de Novembro de 2015}    %para ocultar a data digite: \date{ }
+\date{26 de Novembro de 2015}    %para ocultar a data digite: \date{ }
 %*******************************************************
 \begin{document}    %Inicio do documento
 \maketitle  %cria o titulo na capa
+
+\pagebreak
 
 \tableofcontents %Sumario
 %-------------------------------------------------------
 \chapter{Problema e Motivação}
 \label{chap_problema}
 
-O DNS provê serviços de resolução de \textit{hosts} por meio da tradução de nomes de domínios em números de endereçamento IP. Como um mesmo domínio pode estar vinculado a vários endereços IP, esse serviço pode ser responsável também por distribuição de carga entre os \textit{hosts} de destino, alternando o endereço fornecido ao cliente quando uma solicitação de resolução de domínio é feita. 
+O DNS provê serviços de resolução de \textit{hosts} por meio da tradução de nomes de domínios em números de endereçamento IP. Como um mesmo domínio pode estar vinculado a vários endereços IP, esse serviço pode ser responsável também por distribuição de carga entre os \textit{hosts} de destino, alternando o endereço fornecido ao cliente quando uma solicitação de resolução de domínio é feita.\\
 
-Quando o DNS foi projetado, no início dos anos 80, não foram pensadas questões de segurança. No momento de uma requisição DNS, o cliente simplesmente que a informação recebida é válida e legítima. Essa forma de requisição cria vulnerabilidades com o envenenamento de \textit{cache}. 
+Quando o DNS foi projetado, no início dos anos 80, não foram pensadas questões de segurança. No momento de uma requisição DNS, o cliente simplesmente confia que a informação recebida é válida e legítima. Essa forma de requisição cria vulnerabilidades com o envenenamento de \textit{cache}.\\
 
-Para se corigir tais vulnerabilidades, foram definidas extensões de segurança para prover confiabilidade nos registros trocados via DNS: o DNSSEC. Para que não fosse modificada a forma como o DNS opera, o DNSSEC simplemente adiciona novos tipos de registros ao DNS como o RRSIG e o DNSKEY e podem ser requisitados da mesma forma como registros do tipo A, CNAME ou MX.
+Para se corigir tais vulnerabilidades, foram definidas extensões de segurança para prover confiabilidade nos registros trocados via DNS: o DNSSEC. Para que não fosse modificada a forma como o DNS opera, o DNSSEC simplemente adiciona novos tipos de registros ao DNS como o RRSIG e o DNSKEY e podem ser requisitados da mesma forma como registros do tipo A, CNAME ou MX.\\
 
 Neste trabalho, pretende-se apresentar como configurar um DNS com as extensões de segurança segundo o DNSSEC e apresentar o passo-a-passo para que um cliente faça requisições seguras. O processo como um todo para configuração das ferramentas utilizadas e como executar o sistema é apresentado a seguir.
 
@@ -166,22 +171,22 @@ ns2.tcpdump.org.	10800	IN	A	192.139.46.66
 \section{Vulnerabilidades}
 \label{sec_vulnerabilidades}
 
-Com a utilização de protocolo UDP, como não há estabelecimento de conexão apenas um QID (i.e. \textit{query ID}), um atacante pode tentar utilizar vários pacotes para simular respostas de um servidor DNS conhecido e eventualmente enviar um pacote com um QID válido para o cliente. Nesse momento, o atacante conseguirá inserir no \textit{cache} do cliente um redirecionamento de uma página conhecida para uma outra controlada por ele. Essa é apenas uma vulnerabilidade conhecida como envenenamento de \textit{cahe}. Esse e outros tipos de ataques são melhor explicados a seguir.
+Com a utilização de protocolo UDP, como não há estabelecimento de conexão apenas um QID (i.e. \textit{query ID}), um atacante pode tentar utilizar vários pacotes para simular respostas de um servidor DNS conhecido e eventualmente enviar um pacote com um QID válido para o cliente. Nesse momento, o atacante conseguirá inserir no \textit{cache} do cliente um redirecionamento de uma página conhecida para uma outra controlada por ele. Essa é apenas uma vulnerabilidade conhecida como envenenamento de \textit{cahe}. Esse e outros tipos de ataques são melhor explicados a seguir.\\
 
-{\bf Envenenamento de Cache (Cache Poisoning): }este é um dos mais conhecidos e difundidos ataques a segurança do DNS, ocorrendo quando um cliente realiza uma consulta para um determinado dominio, esta consulta é feita a uma zona DNS, porém esta zona não é fornecida por um servidor autoritativo os quais possuem os registros originais que associam aquele domínio a seu endereço de IP, assim um outro servidor de Cache DNS que encontra-se configurado nos resolvers do computador do cliente responde primeiro a requisição do cliente, levando o este a um servidor que não é o servidor de origem dodomínio, assim fornecendo informações forjadas ao cliente. Este cenario é comumente utilizado para levar o utilizador as denominadas páginas de Phishing, onde os dados submetidos pelo resolver são capturadas pelo hacker.
+{\textbf{Envenenamento de Cache (Cache Poisoning):} este é um dos mais conhecidos e difundidos ataques a segurança do DNS, ocorrendo quando um cliente realiza uma consulta para um determinado dominio, esta consulta é feita a uma zona DNS, porém esta zona não é fornecida por um servidor autoritativo os quais possuem os registros originais que associam aquele domínio a seu endereço de IP, assim um outro servidor de Cache DNS que encontra-se configurado nos resolvers do computador do cliente responde primeiro a requisição do cliente, levando o este a um servidor que não é o servidor de origem dodomínio, assim fornecendo informações forjadas ao cliente. Este cenario é comumente utilizado para levar o utilizador as denominadas páginas de Phishing, onde os dados submetidos pelo resolver são capturadas pelo hacker.\\
 
-{\bf Ataque de negação de serviço ou DDoS (Distributed Denial of Service): }Acontece quando um invasor tenta negar a disponibilidade de serviços DNS,atravéss de consultas recursivas, consumindo todos osrecursoss como memoria e processador do servidor. Iso ocorre devido ao alto acesso ao servidor ocasionando um uso execivo de processamento, tornando o mesmo indisponível.
+\textbf{ Ataque de negação de serviço ou DDoS (Distributed Denial of Service): }Acontece quando um invasor tenta negar a disponibilidade de serviços DNS, através de consultas recursivas, consumindo todos os recursos como memória e processador do servidor, tornando-o indisponível.\\
 
-{\bf Modificação de dados: } Apos ocupar uma rede usando DNS, O invasor tenta usar os endereços IP válidos, em pacotes IP criados pelo invasor, assim esses pacotes passam a ter a aparência de um endereço IP válido na rede. Normalmente isso é denominado falsificação de IP.
+\textbf{ Modificação de dados: } Após ocupar uma rede usando DNS, O invasor tenta usar os endereços IP válidos, em pacotes IP criados pelo invasor, assim esses pacotes passam a ter a aparência de um endereço IP válido na rede. Normalmente isso é denominado falsificação de IP.\\
 
-{\bf man-in-the-middle (Homem no meio): } Nesse ataque os dados trocados entre duas partes são interceptados, e assim essas informações são registrados e possivelmente alteradas pelo atacante, sem que as vitimas tomem conhecimento dessa ação, assim fazendo com que os envolvidos acreditem estarem se comunicando diretamente em uma conexão privada, quando de fato a conversa inteira é controlada pelo atacante.
+\textbf{ man-in-the-middle (Homem no meio): } Nesse ataque, os dados trocados entre duas partes são interceptados, e assim essas informações são registrados e possivelmente alteradas pelo atacante, sem que as vítimas tomem conhecimento dessa ação, fazendo com que os envolvidos acreditem que estão se comunicando diretamente em uma conexão privada, quando de fato a conversa é controlada pelo atacante.
 
 \chapter{ DNSSEC  - \textit{Domain Name System Security Extensions}}
 \label{chap_dnssec}
 
-O DNSSEC é uma solução que expande a segurança do serviço DNS, permitindo validar a origem dos dados, assegurar que a informação recebida de um servidor DNS é autêntica, confirmando que a informação não foi alterada durante a passagem pelos vários “nodos” da Internet e confirmar a inexistência de um domínio.
+O DNSSEC é uma solução que expande a segurança do serviço DNS, permitindo validar a origem dos dados, assegurar que a informação recebida de um servidor DNS é autêntica, confirmando que a informação não foi alterada durante a passagem pelos vários “nodos” da Internet e confirmar a inexistência de um domínio.\\
 
-O sistema DNSSEC introduz apenas alguns novos tipos de Registos nas zonas DNS, nomeadamente DNSKEY, RRSIG e DS, sendo compatível com servidores ou clientes que não tenham implementado o DNSSEC. As extensões de segurança DNSSEC utilizam criptografia assimétrica, permitindo que a verificação e troca de informação DNS entre o servidor e o cliente seja privada e entregue sem alterações, recorrendo a uma assinatura digital e um conjunto de chaves privadas e publicas.
+O sistema DNSSEC introduz apenas alguns novos tipos de Registos nas zonas DNS, nomeadamente DNSKEY, RRSIG e DS, sendo compatível com servidores ou clientes que não tenham implementado o DNSSEC. As extensões de segurança DNSSEC utilizam criptografia assimétrica, permitindo que a verificação e troca de informação DNS entre o servidor e o cliente seja privada e entregue sem alterações, recorrendo a uma assinatura digital e um conjunto de chaves privadas e publicas.\\
 
 O DNSSEC é baseado numa cadeia de confiança, onde inicialmente é validada a raiz “.”, assinada digitalmente pela ICANN e IANA. Posteriormente a raiz assina a zona “.pt” utilizando a sua chave privada e anexa-lhe a chave publica, permitindo a partir desse momento que quando um servidor de nomes local fizer uma consulta relacionada com um domínio “.pt”, este possa validar a autenticidade da raiz “.pt” recorrendo à chave publica. O processo é repetido, até chegar à zona final correspondente ao domínio que está a ser assinado e validado. As extensões de segurança do DNS são totalmente compatíveis com IPv6, uma vez que apenas é validada a integridade dos registos.
 
@@ -204,20 +209,20 @@ Exemplo de código
 \chapter{Resultados}
 
 \section{Implementação da Solução}
-O ecosistema desenvolvido nesse projeto, tem como base a utilização de máquinas \textit{Vagrant}, que provê serviços de virtualização de ambientes para facilitar configuração de diferentes ambientes para vários sistemas operacionais. O provedor de máquinas virtuais utilizado neste trabalho foi o VirtualBox. Para a configuração do ambiente, é necessário a instalação do vagrant \footnote{Vagrant disponível em: https://www.vagrantup.com/} e do VirtualBox \footnote{VirtualBox disponível em: https://www.virtualbox.org/}.
+O ecosistema desenvolvido nesse projeto, tem como base a utilização de máquinas \textit{Vagrant}, que provê serviços de virtualização de ambientes para facilitar configuração de diferentes ambientes para vários sistemas operacionais. O provedor de máquinas virtuais utilizado neste trabalho foi o VirtualBox. Para a configuração do ambiente, é necessário a instalação do vagrant \footnote{Vagrant disponível em: https://www.vagrantup.com/} e do VirtualBox \footnote{VirtualBox disponível em: https://www.virtualbox.org/}.\\
 
-Foram desenvolvidos \textit{scripts} para inicialização das máquinas e configurações dos serviços, todos os passos para subir o ambiente completo foi passado para o script executável \textit{quick-start} que sobe as máquinas e gera um arquivo de \textit{log} para uma requisição a um serviço DNS seguro provido pelo servidor DNS configurado. Todo o ambiente pode ser desligado por meio do \textit{script} de \textit{quick-exit} que destrói os ambientes criados e remove arquivos temporários.
+Foram desenvolvidos \textit{scripts} para inicialização das máquinas e configurações dos serviços, todos os passos para subir o ambiente completo foi passado para o script executável \textit{quick-start} que sobe as máquinas e gera um arquivo de \textit{log} para uma requisição a um serviço DNS seguro provido pelo servidor DNS configurado. Todo o ambiente pode ser desligado por meio do \textit{script} de \textit{quick-exit} que destrói os ambientes criados e remove arquivos temporários.\\
 
-Execute os seguintes passos para subir o ambiente: Com as dependências instaladas, execute o arquivo quick-start encontrado na pasta vagrant. Esse executável irá inicializar um servidor DNS seguro configurando a zona \textit{redesfga.com}, uma servidor apache para onde a zona configurada aponta e um cliente que realizará uma requisição de resolução de nome ao servidor DNS. O resultado da requisição é encontrado no arquivo dnssec.log na pasta vagrant, e mostra todo o processo executado para fazer a requisição segura do domínio passado.
+Execute os seguintes passos para subir o ambiente: Com as dependências instaladas, execute o arquivo quick-start encontrado na pasta vagrant. Esse executável irá inicializar um servidor DNS seguro configurando a zona \textit{redesfga.com}, uma servidor apache para onde a zona configurada aponta e um cliente que realizará uma requisição de resolução de nome ao servidor DNS. O resultado da requisição é encontrado no arquivo dnssec.log na pasta vagrant, e mostra todo o processo executado para fazer a requisição segura do domínio passado.\\
 
-É importante ressaltar que o DNSSEC configurado não provê registro de \textit{delegation signer} (DS), isso devido ao custo atrelado a aquisição de um registro em servidores autorizados. Entretanto, o tópico a seguir mostra como configurar DS para um servidor DNS seguro.
+É importante ressaltar que o DNSSEC não provê registro de \textit{delegation signer} (DS), isso devido ao custo atrelado à aquisição de um registro em servidores autorizados. Entretanto, o processo de configuração do DS foi estudado e pode ser encontrado por completo na \textit{wiki} do projeto no \textit{github}\footnote{documentação sobre configuração do DS: https://github.com/ArthurJahn/FRC-Final/wiki.}.
 
-O processo inteiro para configuração pode ser encontrado na \textit{wiki} \footnote{documentação sobre configuração do DS: https://github.com/ArthurJahn/FRC-Final/wiki.}  
+
 \section{Considerações}
 
-O DNS é um serviço crucial para o funcionamento da internet atualmente. Entretanto não foi idealizado provendo serviços de segurança, o que gera várias vulnerabilidades que são utilizadas para atacantes gerarem comportamentos idesejados da rede. 
+O DNS é um serviço crucial para o funcionamento da internet atualmente. Entretanto não foi idealizado provendo serviços de segurança, o que gera várias vulnerabilidades que são utilizadas para atacantes gerarem comportamentos idesejados da rede. \\
 
-Com esse trabalho foi possível identificar vulnerabilidades do serviço de DNS, configurar extensões de segurança DNSSEC, verificar os paços para a aquisição de respostas de requisições DNS de forma segura e compreender como os serviços de verificação de autenticidade da internet funcionam e quem é capaz de prover tais serviços. 
+Com esse trabalho foi possível identificar vulnerabilidades do serviço de DNS, configurar extensões de segurança DNSSEC, verificar os paços para a aquisição de respostas de requisições DNS de forma segura e compreender como os serviços de verificação de autenticidade da internet funcionam e quem é capaz de prover tais serviços. \\
 
 Nesse sentido todos os objetivos propostos foram alcançados e o aprendizado obtido por meio da atividade prática mostrou a complexidade das operações relacionadas ao provimento de serviços seguros na internet.
 
