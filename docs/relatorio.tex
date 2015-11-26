@@ -209,8 +209,53 @@ Exemplo de código
 \section{Requisições seguras}
 \label{sec_req_seguras}
 
+Cada zona no DNSSEC tem um par de assinatura de chave(ZSK): a parte privada da chave assina digitalmente cada RRset na zona, enquanto que a porção pública verifica a assinatura. Para habilitar o DNSSEC, um operador de zona cria assinaturas digitais para cada RRset usando o ZSK privado e os armazena em seu servidor DNS como registros RRSIG. Isso é como dizer: "Estes são os meus registros de DNS, eles vêm do meu servidor, e eles devem ser assim", como mostra a figura \ref{fig:keys}.
 
+\begin{figure}[h!]
+	\centering
+	\includegraphics[scale=0.4]{keys.eps}
+	\caption{Chave de assinatura para RRSet.}
+	\label{fig:keys}
+\end{figure}
 
+Quando um cliente DNSSEC solicita um tipo de registro em particular (por exemplo, AAAA), o servidor DNS também retorna o RRSIG correspondente. O cliente pode em seguida puxar o registro DNSKEY contendo a ZSK pública a partir do servidor de nomes. Juntos, o RRset, RRSIG, e ZSK público podem validar a resposta.
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[scale=0.4]{validation.eps}
+	\caption{Validação de registros RRSIG.}
+	\label{fig:keys}
+\end{figure}
+
+Precisa-se de uma forma de validar a ZSK pública, uma vez que não se sabe se houve alteração. Para isso, verifica-se a "validade da validade". 
+
+Além de uma chave de assinatura de zona, servidores DNSSEC também possuem uma chave de assinatura (KSK). O KSK valida o registro DNSKEY exatamente da mesma maneira como nosso ZSK garantiu o resto de nossas RRsets na seção anterior: Ele assina a ZSK público (que é armazenado em um registro DNSKEY), criando uma RRSIG para o DNSKEY.
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[scale=0.4]{valid_validation.eps}
+	\caption{Verificação da validade da chave.}
+	\label{fig:keys}
+\end{figure}
+
+Assim como o ZSK público, o servidor de nomes publica o KSK pública em outro registro DNSKEY, que nos dá a RRset DNSKEY mostrado acima. Tanto o KSK e ZSK pública público são assinados pelo KSK privada. Clientes pode então utilizar a KSK pública para validar a ZSK pública.
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[scale=0.4]{complete_req.eps}
+	\caption{Verificação completa da autenticidade do registro.}
+	\label{fig:keys}
+\end{figure}
+
+Resumidamente, a resolução de nome de forma segura é realizada pelo cliente da seguinte forma:
+\begin{itemize}
+	\item Solicite o RRset desejado, que também retorna o registro RRSIG correspondente.
+	\item Solicite a ZSK e KSK pública, que também retornam o RRSIG para o DNSKEY RRset.
+	\item Verifique se o RRSIG do RRset solicitado com a ZSK público.
+	\item Verifique se o RRSIG do DNSKEY RRset com o KSK público.
+\end{itemize}
+
+É importante ressaltar que o serviço de DNSSEC configurado neste trabalho não provê registro no \textit{delegation signer} (DS) para uma KSK, isso devido ao custo atrelado à aquisição de um registro em servidores autorizados. Entretanto, o processo de configuração do DS foi estudado e pode ser encontrado por completo na \textit{wiki} do projeto no \textit{github}\footnote{documentação sobre configuração do DS: https://github.com/ArthurJahn/FRC-Final/wiki.}.
 
 \chapter{Resultados}
 
@@ -220,9 +265,6 @@ O ecosistema desenvolvido nesse projeto, tem como base a utilização de máquin
 Foram desenvolvidos \textit{scripts} para inicialização das máquinas e configurações dos serviços, todos os passos para subir o ambiente completo foi passado para o script executável \textit{quick-start} que sobe as máquinas e gera um arquivo de \textit{log} para uma requisição a um serviço DNS seguro provido pelo servidor DNS configurado. Todo o ambiente pode ser desligado por meio do \textit{script} de \textit{quick-exit} que destrói os ambientes criados e remove arquivos temporários.\\
 
 Execute os seguintes passos para subir o ambiente: Com as dependências instaladas, execute o arquivo quick-start encontrado na pasta vagrant. Esse executável irá inicializar um servidor DNS seguro configurando a zona \textit{redesfga.com}, uma servidor apache para onde a zona configurada aponta e um cliente que realizará uma requisição de resolução de nome ao servidor DNS. O resultado da requisição é encontrado no arquivo dnssec.log na pasta vagrant, e mostra todo o processo executado para fazer a requisição segura do domínio passado.\\
-
-É importante ressaltar que o serviço de DNSSEC configurado não provê registro de \textit{delegation signer} (DS), isso devido ao custo atrelado à aquisição de um registro em servidores autorizados. Entretanto, o processo de configuração do DS foi estudado e pode ser encontrado por completo na \textit{wiki} do projeto no \textit{github}\footnote{documentação sobre configuração do DS: https://github.com/ArthurJahn/FRC-Final/wiki.}.
-
 
 \section{Considerações}
 
