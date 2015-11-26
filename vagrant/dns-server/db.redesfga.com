@@ -14,9 +14,9 @@ $TTL    3h
 
 
 redesfga.com.    IN      MX      10      mail.redesfga.com.
-redesfga.com.    IN      A       192.168.1.22
-ns1                     IN      A       192.168.1.22
-ns2                     IN      A       192.168.1.22
+redesfga.com.    IN      A       192.168.0.200
+ns1                     IN      A       192.168.0.200
+ns2                     IN      A       192.168.0.200
 www                     IN      CNAME   redesfga.com.
-mail                    IN      A       192.168.1.22
+mail                    IN      A       192.168.0.200
 ftp                     IN      CNAME   redesfga.com.

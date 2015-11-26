@@ -37,19 +37,8 @@
 %-------------------------------------------------------
 \chapter{Problema e Motivação}
 \label{chap_problema}
-Devido a enorme quantidade de sites disponiveis na internet, para o computador localizar estes sites na rede independemente de onde estes estejam armazenados, é nescessario a utilizaç~ao de servidores do tipo DNS. Estes servidores traduzem dominios www.redesfga.com em endereços de IP( seja ele IPv4 ou IPv6), assim tornando possivel a localizaç~ao dos servidores (ou conjunto de servidores) que hopedam o site requisitado. O DNS ser´a melhor detalhada no capitulo ~\ref{chap_dns}
 
-Primeiramente introduzirmos o conceito de resolver DNS, estes são responsaveis por iniciar as consultas que ocasionarão na tradução do recurso procurado, por exemplo um a tradução de um nome de domínio em um endereço IP.
-
-O DNSSEC possibilita uma maior segurança ao serviço DNS, permitindo assim que as consultas DNS efetuadas sejam autenticadas e validadas. Assim possibilitando uma proteção ao usuario em relação a diversos ataques referentes ao protocolo DNS, como: 
-
- {\bf Envenenamento de Cache (Cache Poisoning): }este é um dos mais conhecidos e difundidos ataques a segurança do DNS, ocorrendo quando um cliente realiza uma consulta para um determinado dominio, esta consulta é feita a uma zona DNS, porém esta zona não é fornecida por um servidor autoritativo os quais possuem os registros originais que associam aquele domínio a seu endereço de IP, assim um outro servidor de Cache DNS que encontra-se configurado nos resolvers do computador do cliente responde primeiro a requisição do cliente, levando o este a um servidor que não é o servidor de origem do dominio, assim fornecendo informações forjadas ao cliente. Este cenario é comumente utilizado para levar o utilizador as denomidas páginas de Phishing, onde os dados submetidos pelo resolver são capturadas pelo hacker.
-
-
-Aqui devem ser apresentados os problemas de segurança do DNS e como eles afetam os serviços disponibilizados pela internet.
-
-Deve mostrar também o porquê da utilização de DNSSEC, as suas vantagens e o escopo de segurança (ou seja, quais tipos de ataques são evitados com a utilização de um DNSSEC e quais não).
-
+	
 \chapter{DNS  - \textit{Domain Name System}}
 \label{chap_dns}
 
@@ -174,7 +163,11 @@ ns2.tcpdump.org.	10800	IN	A	192.139.46.66
 \section{Vulnerabilidades}
 \label{sec_vulnerabilidades}
 
-Explicar as vulnerabilidades e exemplificar no servidor.
+{\bf Envenenamento de Cache (Cache Poisoning): }este é um dos mais conhecidos e difundidos ataques a segurança do DNS, ocorrendo quando um cliente realiza uma consulta para um determinado dominio, esta consulta é feita a uma zona DNS, porém esta zona não é fornecida por um servidor autoritativo os quais possuem os registros originais que associam aquele domínio a seu endereço de IP, assim um outro servidor de Cache DNS que encontra-se configurado nos resolvers do computador do cliente responde primeiro a requisição do cliente, levando o este a um servidor que não é o servidor de origem do dominio, assim fornecendo informações forjadas ao cliente. Este cenario é comumente utilizado para levar o utilizador as denomidas páginas de Phishing, onde os dados submetidos pelo resolver são capturadas pelo hacker.
+
+{\bf Ataque de negação de serviço ou DDoS (Distributed Denial of Service): }Acontece quando um invasor tenta negar a disponibilidade de serviços DNS, atraves de consultas recursivas, consumindo todos os resursos como memoria e processador do servidor. Iso ocorre devido ao alto acesso ao servidor ocasionando um uso execivo de processamento, tornando o mesmo indisponivel.
+
+{\bf Modificação de dados: } Apos ocupar uma rede usando DNS, O invasor tenta usar os endereços IP válidos, em pacotes IP criados pelo invasor, assim esses pacotes passam a ter a aparência de um endereço IP válido na rede. Normalmente isso é denominado falsificação de IP.
 
 \chapter{ DNSSEC  - \textit{Domain Name System Security Extensions}}
 \label{chap_dnssec}
