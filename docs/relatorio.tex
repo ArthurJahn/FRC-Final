@@ -193,18 +193,246 @@ O DNSSEC é baseado numa cadeia de confiança, onde inicialmente é validada a r
 \section{Configuração do Servidor DNS Seguro}
 \label{sec_config_segura}
 
-Passos para a configuração segura
+\section{Configuração do Servidor DNS Seguro}
+\label{sec_config_segura}
 
-Exemplo de código
+\textbf{DNSSEC Resource Records}
+\\\ Um \textit{ Resource Records(RR)} contém uma informação específica sobre o domínio. Alguns dos mais comuns são registro que contém o endereço IP do domínio, registros AAAA que detém as informações IPv6, e também os registro MX contendo servidores de e-mail. O DNSSEC contém várias RRS, as quais destacam-se:
+
+\begin{itemize}
+\item \textbf{DNSKEY} contém a chave pública que os resolvers utilizam para validar a conexão.
+\item \textbf{RRSIG} existe para cada RR e contém a assinatura digital de um registro.
+\item \textbf{DS \textit{(Delegation Signer)}} - este registro existe em \textit{TLD's nameservers}. O objetivo desse registro é verificar a autenticidade do próprio DNSKEY.
+\end{itemize}
+
+\textbf{Domain Name}: redesfga.com
+
+\textbf{Master Nameserver:} Endereço IP: 1.1.1.1 Hostname: master.redesfga.com OS: Ubuntu 14\\
+
+\textbf{Master}: Debian\\
+
+\textbf{Nome do serviço}: Bind9\\
+
+Abra os seguintes arquivos:
+
+- Configuração principal
 \begin{lstlisting}[language=bash]
+	/etc/bind/named.conf.options
+\end{lstlisting}
 
-	sudo aptitude install tshark
+- Arquivo nomes Zona
+\begin{lstlisting}[language=bash]
+	/etc/bind/named.conf.local
+\end{lstlisting}
 
-	sudo aptitude install texlive
+- Arquivo de zona Padrão
+\begin{lstlisting}[language=bash]
+	/var/cache/bind/	
+\end{lstlisting}
 
-	sudo aptitude install texlive-lang-portuguese
+\subsection{Configuração do DNSSec Master}
+Ative o DNSSEC adicionando as seguintes diretivas de configuração dentro de options{ }
+\begin{lstlisting}[language=bash]
+	nano /etc/bind/named.conf.options
+	
+	dnssec-enable yes;
+	dnssec-validation yes;
+	dnssec-lookaside auto;
+\end{lstlisting}
+
+Navegue até seus arquivos de zona.
+\begin{lstlisting}[language=bash]
+	cd /var/cache/bind	
+\end{lstlisting}
+
+Crie uma chave de assinatura de zona \textit{Zone Signing Key(ZSK)} com este comando
+\begin{lstlisting}[language=bash]
+	dnssec-keygen -a NSEC3RSASHA1 -b 2048 -n ZONE redesfga.com
+\end{lstlisting}
+
+Intale o \textbf{haveged} para a criação da chave mais rápidamente
+\begin{lstlisting}[language=bash]
+	sudo apt-get install haveged
+\end{lstlisting}
+
+Crie uma \textit{Key Signing Key(KSK)}.
+\begin{lstlisting}[language=bash]
+	dnssec-keygen -f KSK -a NSEC3RSASHA1 -b 4096 -n ZONE redesfga.com
+\end{lstlisting}
+
+A saida do terminal deve ser semelhante ao exemplo a seguir:
+\begin{lstlisting}[language=bash]
+	root@master:/var/cache/bind# dnssec-keygen -f KSK -a NSEC3RSASHA1 -b 4096 -n ZONE redesfga.com
+	Generating key pair......................++ 			...........................................................................		++
+	Kredesfga.com.+007+62910	
+\end{lstlisting}
+
+O diretório agora terá 4 chaves - pares de chaves privadas e publicas de ZSK e KSK. É necessário adicionar a chave publica que contém o registro \textbf{DNSKEY} para o arquivo de zona.
+
+A estrutura \textit{for} seguinte deve realizar esta tarefa:
+\begin{lstlisting}[language=bash]
+	for key in `ls Kredesfga.com*.key`
+	do
+	echo "\$INCLUDE $key">> db.redesfga.com
+	done
+\end{lstlisting}
+
+Agora a zona deve ser assinada usando o comando:
+\begin{lstlisting}[language=bash]
+	dnssec-signzone -3 <salt> -A -N INCREMENT -o <zonename> -t <zonefilename>
+\end{lstlisting}
+
+Utilize um \textit{salt} diferente. O comando deve gerar a seguinte saída:
+\begin{lstlisting}[language=bash]
+	root@master:/var/cache/bind# dnssec-signzone -A -3 $(head -c 1000 /dev/random | sha1sum | cut -b 1-16) -N 	INCREMENT -o redesfga.com -t db.redesfga.com
+	Verifying the zone using the following algorithms: NSEC3RSASHA1.
+	Zone signing complete:
+	Algorithm: NSEC3RSASHA1: KSKs: 1 active, 0 stand-by, 0 revoked
+    	                    ZSKs: 1 active, 0 stand-by, 0 revoked
+	example.com.zone.signed
+	Signatures generated:                       14
+	Signatures retained:                         0
+	Signatures dropped:                          0
+	Signatures successfully verified:            0
+	Signatures unsuccessfully verified:          0
+	Signing time in seconds:                 0.046
+	Signatures per second:                 298.310
+	Runtime in seconds:                      0.056
 
 \end{lstlisting}
+
+Uma string de 16 caracteres pode ser gerada para salt usando o comando:
+\begin{lstlisting}[language=bash]
+	head -c 1000 /dev/random | sha1sum | cut -b 1-16
+\end{lstlisting}
+
+Isto cria um arquivo chamado db.redesfga.com.signed que contém o registro \textbf{RRSIG} para cada registro DNS. Agora é necessário avisar o BIND para carregar a zona 'assinada'.
+\begin{lstlisting}[language=bash]
+	nano /etc/bind/named.conf.local
+\end{lstlisting}
+
+Mude a opção \textbf{file} dentro da seção \textbf{"zone \{ \}" }.
+\begin{lstlisting}[language=bash]
+	zone "redesfga.com" IN {
+	    type master;
+	    file "db.redesfga.com.signed";
+	    allow-transfer { 2.2.2.2; };
+    	allow-update { none; };
+	};
+\end{lstlisting}
+
+Após salvar o arquivo recarregue o serviço do \textbf{bind}.
+\begin{lstlisting}[language=bash]
+	nano /etc/bind/named.conf.local
+\end{lstlisting}
+
+\begin{lstlisting}[language=bash]
+	service bind9 reload
+\end{lstlisting}
+
+Verifique pelo registro de DNSKEY usando o comando \textbf{dig} no mesmo servidor.
+\begin{lstlisting}[language=bash]
+	dig DNSKEY redesfga.com. @localhost +multiline
+\end{lstlisting}
+
+O comando deve gerar a seguinte saída:
+\begin{lstlisting}[language=bash]
+root@master:/var/cache/bind# dig DNSKEY example.com. @localhost +multiline
+;; Truncated, retrying in TCP mode.
+
+; <<>> DiG 9.8.4-rpz2+rl005.12-P1 <<>> DNSKEY example.com. @localhost +multiline
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 43986
+;; flags: qr aa rd; QUERY: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 0
+;; WARNING: recursion requested but not available
+
+;; QUESTION SECTION:
+;example.com.       IN DNSKEY
+
+;; ANSWER SECTION:
+redesfga.com.        86400 IN DNSKEY   256 3 7 (
+                AwEAActPMYurNEyhUgHjPctbLCI1VuSj3xcjI8QFTpdM
+                8k3cYrfwB/WlNKjnnjt98nPmHv6frnuvs2LKIvvGzz++
+                kVwVc8uMLVyLOxVeKhygDurFQpLNNdPumuc2MMRvV9me
+                fPrdKWtEEtOxq6Pce3DW2qRLjyE1n1oEq44gixn6hjgo
+                sG2FzV4fTQdxdYCzlYjsaZwy0Kww4HpIaozGNjoDQVI/
+                f3JtLpE1MYEb9DiUVMjkwVR5yH2UhJwZH6VVvDOZg6u6
+                YPOSUDVvyofCGcICLqUOG+qITYVucyIWgZtHZUb49dpG
+                aJTAdVKlOTbYV9sbmHNuMuGt+1/rc+StsjTPTHU=
+                ) ; key id = 40400
+redesfga.com.        86400 IN DNSKEY   257 3 7 (
+                AwEAAa2BE0dAvMs0pe2f+D6HaCyiFSHw47BA82YGs7Sj
+                qSqH3MprNra9/4S0aV6SSqHM3iYZt5NRQNTNTRzkE18e
+                3j9AGV8JA+xbEow74n0eu33phoxq7rOpd/N1GpCrxUsG
+                kK4PDkm+R0hhfufe1ZOSoiZUV7y8OVGFB+cmaVb7sYqB
+                RxeWPi1Z6Fj1/5oKwB6Zqbs7s7pmxl/GcjTvdQkMFtOQ
+                AFGqaaSxVrisjq7H3nUj4hJIJ+SStZ59qfW3rO7+Eqgo
+                1aDYaz+jFHZ+nTc/os4Z51eMWsZPYRnPRJG2EjJmkBrJ
+                huZ9x0qnjEjUPAcUgMVqTo3hkRv0D24I10LAVQLETuw/
+                QOuWMG1VjybzLbXi5YScwcBDAgtEpsQA9o7u6VC00DGh
+                +2+4RmgrQ7mQ5A9MwhglVPaNXKuI6sEGlWripgTwm425
+                JFv2tGHROS55Hxx06A416MtxBpSEaPMYUs6jSIyf9cjB
+                BMV24OjkCxdz29zi+OyUyHwirW51BFSaOQuzaRiOsovM
+                NSEgKWLwzwsQ5cVJBEMw89c2V0sHa4yuI5rr79msRgZT
+                KCD7wa1Hyp7s/r+ylHhjpqrZwViOPU7tAGZ3IkkJ2SMI
+                e/h+FGiwXXhr769EHbVE/PqvdbpcsgsDqFu0K2oqY70u
+                SxnsLB8uVKYlzjG+UIoQzefBluQl
+                ) ; key id = 62910
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#53(127.0.0.1)
+;; WHEN: Wed Nov 27 18:18:30 2013
+;; MSG SIZE  rcvd: 839
+
+Check for the presence of RRSIG records.
+
+dig A redesfga.com. @localhost +noadditional +dnssec +multiline
+; <<>> DiG 9.8.4-rpz2+rl005.12-P1 <<>> A redesfga.com. @localhost +noadditional +dnssec +multiline
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 32902
+;; flags: qr aa rd; QUERY: 1, ANSWER: 2, AUTHORITY: 3, ADDITIONAL: 5
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 4096
+;; QUESTION SECTION:
+;redesfga.com.         IN A
+
+;; ANSWER SECTION:
+redesfga.com.          86400 IN A 93.184.216.119
+redesfga.com.          86400 IN RRSIG A 7 2 86400 20131227171405 (
+                            20131127171405 40400 example.com.
+                            JCoL8L7As1a8CXnx1W62O94eQl6zvVQ3prtNK7BWIW9O
+                            lir/4V+a6c+0tbt4z4lhgmb0sb+qdvqRnlI7CydaSZDb
+                            hlrJA93fHqFqNXw084YD1gWC+M8m3ewbobiZgBUh5W66
+                            1hsVjWZGvvQL+HmobuSvsF8WBMAFgJgYLg0YzBAvwHIk
+                            886be6vbNeAltvPl9I+tjllXkMK5dReMH40ulgKo+Cwb
+                            xNQ+RfHhCQIwKgyvL1JGuHB125rdEQEVnMy26bDcC9R+
+                            qJNYj751CEUZxEEGI9cZkD44oHwDvPgF16hpNZGUdo8P
+                            GtuH4JwP3hDIpNtGTsQrFWYWL5pUuuQRwA== )
+
+;; AUTHORITY SECTION:
+redesfga.com.          86400 IN NS master.example.com.
+redesfga.com.          86400 IN RRSIG NS 7 2 86400 20131227171405 (
+                            20131127171405 40400 example.com.
+                            hEGzNvKnc3sXkiQKo9/+ylU5WSFWudbUc3PAZvFMjyRA
+                            j7dzcVwM5oArK5eXJ8/77CxL3rfwGvi4LJzPQjw2xvDI
+                            oVKei2GJNYekU38XUwzSMrA9hnkremX/KoT4Wd0K1NPy
+                            giaBgyyGR+PT3jIP95Ud6J0YS3+zg60Zmr9iQPBifH3p
+                            QrvvY3OjXWYL1FKBK9+rJcwzlsSslbmj8ndL1OBKPEX3
+                            psSwneMAE4PqSgbcWtGlzySdmJLKqbI1oB+d3I3bVWRJ
+                            4F6CpIRRCb53pqLvxWQw/NXyVefNTX8CwOb/uanCCMH8
+                            wTYkCS3APl/hu20Y4R5f6xyt8JZx3zkZEQ== )
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#53(127.0.0.1)
+;; WHEN: Thu Nov 28 00:01:06 2013
+;; MSG SIZE  rcvd: 1335
+\end{lstlisting}
+
+E então a configuração do servidor master está completa.
 
 \section{Requisições seguras}
 \label{sec_req_seguras}
